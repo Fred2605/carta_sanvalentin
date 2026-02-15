@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Carta para Ti mi Changuita 💌</title>
   <style>
     :root{
@@ -13,13 +13,15 @@
       --card:#fffafc;
     }
 
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
+
     body{
       margin:0;
-      min-height:100vh;
+      min-height:100dvh;
       font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
       background: linear-gradient(180deg,var(--bg1),var(--bg2));
-      overflow:hidden;
+      overflow-x:hidden;   /* importante */
+      overflow-y:auto;     /* importante para que aparezcan botones en móvil */
       color:var(--text);
     }
 
@@ -33,25 +35,25 @@
     .wrap{
       position:relative;
       z-index:2;
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:20px;
+      min-height:100dvh;
+      display:block;               /* antes grid */
+      padding:14px 14px 36px;
     }
 
     .scene{
       width:min(950px, 95vw);
+      margin:0 auto;
       text-align:center;
     }
 
     h1{
-      margin:6px 0 2px;
+      margin:10px 0 4px;
       color:var(--accent);
-      font-size:clamp(1.4rem, 2.3vw, 2.1rem);
+      font-size:clamp(1.3rem, 2.3vw, 2.1rem);
     }
 
     .hint{
-      margin:6px 0 18px;
+      margin:6px 0 14px;
       font-weight:600;
       opacity:.85;
     }
@@ -60,17 +62,18 @@
     .envelope-area{
       display:grid;
       place-items:center;
-      min-height:290px;
+      min-height:280px;
     }
 
     .envelope{
       position:relative;
       width:min(360px, 82vw);
-      aspect-ratio: 16/10;
+      aspect-ratio:16/10;
       cursor:pointer;
       transform: translateY(0);
       transition: transform .3s ease;
       filter: drop-shadow(0 14px 22px rgba(216,27,96,.2));
+      -webkit-tap-highlight-color: transparent;
     }
     .envelope:hover{ transform: translateY(-4px); }
 
@@ -105,6 +108,7 @@
       transform-origin: top center;
       transition: transform .8s cubic-bezier(.2,.8,.2,1);
       z-index:4;
+      backface-visibility:hidden;
     }
 
     .seal{
@@ -124,6 +128,8 @@
       color:#a0134d;
       z-index:5;
       user-select:none;
+      padding:0 10px;
+      text-wrap:balance;
     }
 
     .envelope.open .env-flap{
@@ -133,7 +139,7 @@
     /* Carta */
     .card{
       display:none;
-      margin:16px auto 0;
+      margin:12px auto 24px;
       width:min(900px, 95vw);
       background:var(--card);
       border:2px solid #ff8ab3;
@@ -175,6 +181,8 @@
 
     .photo-wrap img{
       width:min(220px, 62vw);
+      max-height:260px;
+      object-fit:cover;
       border-radius:18px;
       border:3px solid #ff8ab3;
       box-shadow:0 8px 20px rgba(0,0,0,.12);
@@ -205,16 +213,29 @@
       background:#ff6fa8;
       color:white;
       box-shadow:0 7px 16px rgba(216,27,96,.24);
+      -webkit-tap-highlight-color: transparent;
     }
     button:hover{ transform: translateY(-1px); }
-    button.secondary{
-      background:#f19bbf;
-    }
+    button.secondary{ background:#f19bbf; }
 
     .small{
       margin-top:8px;
       font-size:.92rem;
       opacity:.75;
+    }
+
+    @media (max-width: 600px){
+      .envelope-area{ min-height:230px; }
+      .card{ padding:16px; border-radius:18px; }
+      .actions{
+        position: sticky;
+        bottom: 10px;
+        background: rgba(255,250,252,.92);
+        border: 1px solid #ffd2e4;
+        border-radius: 14px;
+        padding: 10px;
+        z-index: 3;
+      }
     }
   </style>
 </head>
@@ -240,10 +261,12 @@
       <section class="card" id="card">
         <h2 id="cardTitle">Para ti 💌</h2>
         <div class="content" id="content"></div>
+
         <div class="photo-wrap" id="photoWrap">
-          <img id="photo" src="imagen.jpg" alt="Recuerdo especial" />
+          <img id="photo" src="./imagen.jpg" alt="Recuerdo especial" />
           <div>Nuestro recuerdo 📸</div>
         </div>
+
         <div class="sign" id="sign"></div>
 
         <div class="actions">
@@ -255,7 +278,7 @@
     </div>
   </div>
 
-  <audio id="bgm" src="musica.mp3" loop preload="auto"></audio>
+  <audio id="bgm" src="./musica.mp3" loop preload="metadata"></audio>
 
   <script>
     // ===== PERSONALIZA AQUÍ =====
@@ -295,6 +318,10 @@
     photo.onload = () => {
       photoWrap.style.display = "flex";
     };
+    // Si ya vino desde caché del navegador
+    if (photo.complete && photo.naturalWidth > 0) {
+      photoWrap.style.display = "flex";
+    }
 
     let opened = false;
     let typingTimer = null;
@@ -317,8 +344,10 @@
       opened = true;
       envelope.classList.add("open");
       hint.textContent = "💖";
+
       setTimeout(() => {
         card.style.display = "block";
+        card.scrollIntoView({ behavior: "smooth", block: "start" }); // importante móvil
         typeText(content, MENSAJE, 18, () => {
           typeText(sign, FIRMA, 34);
         });
@@ -334,9 +363,10 @@
       content.textContent = "";
       sign.textContent = "";
       hint.textContent = "Haz clic en el sobre ✨";
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
-    // Música: por políticas del navegador, mejor activarla con clic del usuario
+    // Música: requiere clic del usuario en la mayoría de navegadores
     musicBtn.addEventListener("click", async () => {
       try {
         if (bgm.paused) {
@@ -347,20 +377,23 @@
           musicBtn.textContent = "Activar música 🎵";
         }
       } catch (e) {
-        alert("No se pudo reproducir audio en este navegador.");
+        alert("No se pudo reproducir audio. Verifica el archivo musica.mp3.");
       }
     });
 
     // ===== Corazones de fondo (canvas) =====
     const canvas = document.getElementById("hearts");
     const ctx = canvas.getContext("2d");
-    let W = canvas.width = innerWidth;
-    let H = canvas.height = innerHeight;
 
-    addEventListener("resize", () => {
-      W = canvas.width = innerWidth;
-      H = canvas.height = innerHeight;
-    });
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    let W = canvas.width;
+    let H = canvas.height;
 
     const hearts = Array.from({ length: 45 }, () => ({
       x: Math.random() * W,
@@ -371,36 +404,41 @@
       a: 0.45 + Math.random() * 0.45
     }));
 
-    function drawHeart(x,y,size,alpha){
+    function drawHeart(x, y, size, alpha) {
       ctx.save();
-      ctx.translate(x,y);
-      ctx.scale(size/20,size/20);
+      ctx.translate(x, y);
+      ctx.scale(size / 20, size / 20);
       ctx.globalAlpha = alpha;
       ctx.fillStyle = "#ff5fa2";
       ctx.beginPath();
-      ctx.moveTo(0,6);
-      ctx.bezierCurveTo(0,-2,-10,-2,-10,6);
-      ctx.bezierCurveTo(-10,12,-4,16,0,20);
-      ctx.bezierCurveTo(4,16,10,12,10,6);
-      ctx.bezierCurveTo(10,-2,0,-2,0,6);
+      ctx.moveTo(0, 6);
+      ctx.bezierCurveTo(0, -2, -10, -2, -10, 6);
+      ctx.bezierCurveTo(-10, 12, -4, 16, 0, 20);
+      ctx.bezierCurveTo(4, 16, 10, 12, 10, 6);
+      ctx.bezierCurveTo(10, -2, 0, -2, 0, 6);
       ctx.fill();
       ctx.restore();
     }
 
-    function loop(){
-      ctx.clearRect(0,0,W,H);
-      hearts.forEach(h=>{
+    function loop() {
+      W = canvas.width;
+      H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      hearts.forEach(h => {
         h.x += h.vx;
         h.y -= h.vy;
-        if(h.y < -30){ h.y = H + 20; h.x = Math.random()*W; }
-        if(h.x < -30) h.x = W + 20;
-        if(h.x > W + 30) h.x = -20;
-        drawHeart(h.x,h.y,h.s,h.a);
+
+        if (h.y < -30) { h.y = H + 20; h.x = Math.random() * W; }
+        if (h.x < -30) h.x = W + 20;
+        if (h.x > W + 30) h.x = -20;
+
+        drawHeart(h.x, h.y, h.s, h.a);
       });
+
       requestAnimationFrame(loop);
     }
     loop();
   </script>
 </body>
 </html>
-
